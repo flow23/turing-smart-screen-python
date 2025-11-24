@@ -92,14 +92,14 @@ STATS:
     #     HEIGHT: 10
     #     COLOR: 255,0,200
 
-    # ProxmoxNodeUptimeSensor:
-    #   TEXT:
-    #     SHOW: true
-    #     X: 0
-    #     Y: 70
-    #     WIDTH: 160
-    #     HEIGHT: 10
-    #     COLOR: 255,0,200
+    ProxmoxNodeUptimeSensor:
+      TEXT:
+        SHOW: true
+        X: 0
+        Y: 60
+        WIDTH: 160
+        HEIGHT: 10
+        COLOR: 255,0,200
 
     ProxmoxNodeNetworkSensor:
       TEXT:

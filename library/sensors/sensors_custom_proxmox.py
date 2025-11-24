@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 import os
 import time
-from typing import List
+from typing import Dict, List
 
 import requests
 import urllib3
@@ -94,6 +94,18 @@ class ProxmoxBaseSensor(CustomDataSource):
 # ------------------------------
 
 class ProxmoxNodeCPUUsageSensor(ProxmoxBaseSensor):
+    _history_store: Dict[str, List[int]] = {}
+    _history_size = 50
+
+    def _history_key(self) -> str:
+        return f"{self.node}"
+
+    def _remember(self, value: float):
+        hist = self._history_store.setdefault(self._history_key(), [])
+        hist.append(float(value))
+        if len(hist) > self._history_size:
+            hist.pop(0)
+
     def _calc(self):
         d = self._pmx_get(f"/nodes/{self.node}/status") or {}
         cpu = d.get("cpu")
@@ -103,13 +115,24 @@ class ProxmoxNodeCPUUsageSensor(ProxmoxBaseSensor):
             return 0.0
 
     def as_numeric(self):
-        return self._cached(f"nodecpu_{self.node}", self._calc)
+        test = self.last_values()
+        print(test)
+        value = self._cached(f"nodecpu_{self.node}", self._calc)
+        if value is not None:
+            self._remember(value)
+        return value
 
     def as_string(self):
         return f"{self._cache.get(f'nodecpu_{self.node}', 0):.1f} %"
     
     def last_values(self) -> List[float]:
-        return [self._cache.get(f'nodecpu_{self.node}', 0)]
+        hist = self._history_store.get(self._history_key(), [])
+        if not hist:
+            current = self._cache.get(f'nodecpu_{self.node}', None)
+            if current is not None:
+                self._remember(current)
+            hist = self._history_store.get(self._history_key(), [])
+        return hist[-self._history_size:]
 
 
 # ------------------------------
@@ -195,7 +218,7 @@ class ProxmoxNodeNetworkSensor(ProxmoxBaseSensor):
     """ Returns total network traffic in MB (numeric) + 'X.Y MB' string """
     def _calc(self):
         d = self._pmx_get(f"/nodes/{self.node}/netstat") or []
-        print("Network data:", d)
+        #print("Network data:", d)
         total_rx = 0.0
         total_tx = 0.0
         for iface in d:
