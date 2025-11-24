@@ -81,6 +81,22 @@ else:
         os._exit(0)
 
 import library.sensors.sensors_custom as sensors_custom
+import library.sensors.sensors_custom_proxmox as sensors_custom_proxmox
+import library.sensors.sensors_custom_plex as sensors_custom_plex
+
+CUSTOM_SENSOR_MODULES = [
+    sensors_custom,
+    sensors_custom_proxmox,
+    sensors_custom_plex,
+]
+
+
+def load_custom_sensor(class_name: str):
+    for module in CUSTOM_SENSOR_MODULES:
+        cls = getattr(module, class_name, None)
+        if cls is not None:
+            return cls
+    raise AttributeError(f"{class_name} not found in custom sensor modules")
 
 
 def get_theme_file_path(name):
@@ -804,15 +820,17 @@ class Custom:
         for custom_stat in config.THEME_DATA['STATS']['CUSTOM']:
             if custom_stat != "INTERVAL":
 
-                # Load the custom sensor class from sensors_custom.py based on the class name
+                # Load the custom sensor class from available custom sensor modules based on the class name
                 try:
-                    custom_stat_class = getattr(sensors_custom, str(custom_stat))()
+                    custom_class = load_custom_sensor(str(custom_stat))
+                    custom_stat_class = custom_class()
                     numeric_value = custom_stat_class.as_numeric()
                     string_value = custom_stat_class.as_string()
                     last_values = custom_stat_class.last_values()
                 except Exception as e:
                     logger.error(
-                        "Error loading custom sensor class " + str(custom_stat) + " from sensors_custom.py : " + str(e))
+                        f"Error loading custom sensor class {custom_stat} from custom modules: {e}"
+                    )
                     return
 
                 if string_value is None:
