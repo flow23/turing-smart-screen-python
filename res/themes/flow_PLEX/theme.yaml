@@ -1,0 +1,54 @@
+# Copyright (C) 2024-2024  WeAct Studio
+# Imported from https://github.com/WeActStudio/WeActStudio.SystemMonitor
+author: '@flow23'
+display:
+  DISPLAY_SIZE: 0.96"
+  DISPLAY_ORIENTATION: landscape
+  DISPLAY_RGB_LED: 85, 85, 85
+
+static_images:
+  background:
+    PATH: background.png
+    X: 0
+    Y: 0
+    WIDTH: 160
+    HEIGHT: 80
+
+STATS:
+  CUSTOM:
+    INTERVAL: 60
+
+    PlexStreamsSensor:
+      TEXT:
+        SHOW: true
+        LABEL: "Streams"
+
+    PlexMovieCountSensor:
+      TEXT:
+        SHOW: true
+        Y: 10
+        LABEL: "Movies"
+
+    PlexTVShowCountSensor:
+      TEXT:
+        SHOW: true
+        Y: 20
+        LABEL: "TV Shows"
+
+    PlexEpisodesCountSensor:
+      TEXT:
+        SHOW: true
+        Y: 30
+        LABEL: "TV Shows"
+
+    PlexAlbumCountSensor:
+      TEXT:
+        SHOW: true
+        Y: 40
+        LABEL: "Albums"
+
+    PlexSongsCountSensor:
+      TEXT:
+        SHOW: true
+        Y: 50
+        LABEL: "Songs"

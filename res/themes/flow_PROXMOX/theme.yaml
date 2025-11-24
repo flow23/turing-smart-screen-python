@@ -1,0 +1,111 @@
+author: '@flow23'
+display:
+  DISPLAY_SIZE: 0.96"
+  DISPLAY_ORIENTATION: landscape
+  DISPLAY_RGB_LED: 85, 85, 85
+
+static_images:
+  background:
+    PATH: background.png
+    X: 0
+    Y: 0
+    WIDTH: 160
+    HEIGHT: 80
+
+STATS:
+  CUSTOM:
+    INTERVAL: 30   # global refresh interval
+
+    # ------------------------------
+    #   PROXMOX ONLY THEME (TEXT)
+    # ------------------------------
+
+    ProxmoxNodeCPUUsageSensor:
+      TEXT:
+        SHOW: true
+        X: 0
+        Y: 0
+        WIDTH: 160
+        HEIGHT: 10
+        FONT: fusion-pixel/fusion-pixel-10px-monospaced-zh_hans.otf
+        FONT_SIZE: 10
+        FONT_COLOR: 0,0,0
+        COLOR: 0,255,255
+
+    ProxmoxNodeMemoryUsageSensor:
+      TEXT:
+        SHOW: true
+        X: 0
+        Y: 10
+        WIDTH: 160
+        HEIGHT: 10
+        FONT: fusion-pixel/fusion-pixel-10px-monospaced-zh_hans.otf
+        FONT_SIZE: 10
+        FONT_COLOR: 0,0,0
+        COLOR: 0,255,255
+
+    ProxmoxNodeDiskUsageSensor:
+      TEXT:
+        SHOW: true
+        X: 0
+        Y: 20
+        WIDTH: 160
+        HEIGHT: 10
+        FONT: fusion-pixel/fusion-pixel-10px-monospaced-zh_hans.otf
+        FONT_SIZE: 10
+        FONT_COLOR: 0,0,0
+        COLOR: 0,255,255
+
+    ProxmoxVMCountSensor:
+      TEXT:
+        SHOW: true
+        X: 0
+        Y: 30
+        WIDTH: 160
+        HEIGHT: 10
+        COLOR: 0,100,255
+
+    ProxmoxLXCCountSensor:
+      TEXT:
+        SHOW: true
+        X: 0
+        Y: 40
+        WIDTH: 160
+        HEIGHT: 10
+        COLOR: 0,50,255
+
+    # ProxmoxClusterCPUUsageSensor:
+    #   TEXT:
+    #     SHOW: true
+    #     X: 0
+    #     Y: 50
+    #     WIDTH: 160
+    #     HEIGHT: 10
+    #     COLOR: 255,0,255
+
+    # ProxmoxClusterMemoryUsageSensor:
+    #   TEXT:
+    #     SHOW: true
+    #     X: 0
+    #     Y: 60
+    #     WIDTH: 160
+    #     HEIGHT: 10
+    #     COLOR: 255,0,200
+
+    # ProxmoxNodeUptimeSensor:
+    #   TEXT:
+    #     SHOW: true
+    #     X: 0
+    #     Y: 70
+    #     WIDTH: 160
+    #     HEIGHT: 10
+    #     COLOR: 255,0,200
+
+    ProxmoxNodeNetworkSensor:
+      TEXT:
+        SHOW: true
+        X: 0
+        Y: 70
+        WIDTH: 160
+        HEIGHT: 10
+        COLOR: 255,0,200
