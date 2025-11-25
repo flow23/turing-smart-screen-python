@@ -9,7 +9,7 @@ config:
   # Theme to use (located in res/themes)
   # Use the name of the folder as value
   # Choose a theme made for your screen size (see DISPLAY_SIZE inside theme.yaml)
-  THEME: flow_NET
+  THEME: flow_PROXMOX_MEM
 
   # Hardware sensors reading
   # Choose the appropriate method for reading your hardware sensors:
@@ -17,7 +17,7 @@ config:
   # - LHM            use LibreHardwareMonitor library to read hardware sensors (Windows only - NEEDS ADMIN RIGHTS)
   # - STUB / STATIC  use random/static data instead of real hardware sensors
   # - AUTO           use the best method based on your OS: Windows OS will use LHM, other OS will use Python libraries
-  HW_SENSORS: AUTO
+  HW_SENSORS: PYTHON
 
   # Network interfaces
   # Linux/MacOS interfaces are named "eth0", "wlan0", "wlp1s0", "enp2s0"...
@@ -76,3 +76,17 @@ display:
   # This behavior causes the display to disconnect/reconnect, and the COM port to change.
   # On some displays (like rev. A) it can be an issue, in this case change the value to "false".
   RESET_ON_STARTUP: true
+
+CUSTOM:
+  PLEX:
+    url: https://10.0.1.10:32400
+    token: no_no_no
+    cache_ttl: 60
+  PROXMOX:
+    host: https://10.0.1.20:8006
+    username: api@pam
+    token_id: no_no_no
+    token_secret: no_no_no
+    cache_ttl: 60
+    verify_ssl: false
+    node: pve
