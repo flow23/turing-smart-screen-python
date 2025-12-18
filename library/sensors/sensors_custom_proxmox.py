@@ -100,9 +100,9 @@ class ProxmoxNodeCPUUsageSensor(ProxmoxBaseSensor):
     def _history_key(self) -> str:
         return f"{self.node}"
 
-    def _remember(self, value: float):
+    def _remember(self, value: int):
         hist = self._history_store.setdefault(self._history_key(), [])
-        hist.append(float(value))
+        hist.append(int(value))
         if len(hist) > self._history_size:
             hist.pop(0)
 
@@ -110,9 +110,9 @@ class ProxmoxNodeCPUUsageSensor(ProxmoxBaseSensor):
         d = self._pmx_get(f"/nodes/{self.node}/status") or {}
         cpu = d.get("cpu")
         try:
-            return float(cpu) * 100.0
+            return int(cpu) * 100
         except:
-            return 0.0
+            return 0
 
     def as_numeric(self):
         test = self.last_values()
@@ -123,9 +123,9 @@ class ProxmoxNodeCPUUsageSensor(ProxmoxBaseSensor):
         return value
 
     def as_string(self):
-        return f"{self._cache.get(f'nodecpu_{self.node}', 0):.1f} %"
+        return f"{self._cache.get(f'nodecpu_{self.node}', 0)}%"
     
-    def last_values(self) -> List[float]:
+    def last_values(self) -> List[int]:
         hist = self._history_store.get(self._history_key(), [])
         if not hist:
             current = self._cache.get(f'nodecpu_{self.node}', None)

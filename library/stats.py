@@ -832,13 +832,13 @@ class SystemUptime:
 
         d = int(uptimesec // 86400)
         h = int((uptimesec % 86400) // 3600)
-        #m = int((uptimesec % 3600) // 60)
-        #fw_uptimeformatted = f"{d}d {h}h {m}m"
-        fw_uptimeformatted = f"{d}d {h}h"
+        m = int((uptimesec % 3600) // 60)
+        fw_uptimeformatted = f"{d}d {h}h {m}m"
+        #fw_uptimeformatted = f"{d}d {h}h"
 
-        systemuptime_formatted_theme_data = systemuptime_theme_data['FW_FORMATTED']['TEXT']
+        systemuptime_fw_formatted_theme_data = systemuptime_theme_data['FW_FORMATTED']['TEXT']
         display_themed_value(
-            theme_data=systemuptime_formatted_theme_data,
+            theme_data=systemuptime_fw_formatted_theme_data,
             value=fw_uptimeformatted
         )
 
