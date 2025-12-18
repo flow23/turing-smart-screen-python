@@ -2,11 +2,13 @@ from abc import ABC, abstractmethod
 import os
 import time
 from typing import Dict, List
+from functools import lru_cache
 
 import requests
 import urllib3
 import yaml
 
+from library.log import logger
 from library.sensors.sensors_custom import CustomDataSource
 
 # suppress InsecureRequestWarning when verify_ssl is False
@@ -16,8 +18,10 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # CONFIG LOADING — ONLY "../../config.yaml"
 # =====================================================================
 
+@lru_cache(maxsize=1)
 def _load_root_config():
     path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../config.yaml")
+    logger.debug(f"[PROXMOX] Loading config from {path}")
     try:
         if os.path.isfile(path):
             with open(path, "r") as f:
@@ -70,9 +74,9 @@ class ProxmoxBaseSensor(CustomDataSource):
             )
             if r.status_code == 200:
                 return r.json().get("data")
-            print(f"[PROXMOX] HTTP {r.status_code} for {ep}")
+            logger.debug(f"[PROXMOX] HTTP {r.status_code} for {ep}")
         except Exception as e:
-            print(f"[PROXMOX] ERROR: {e}")
+            logger.debug(f"[PROXMOX] ERROR: {e}")
         return None
 
     def _cached(self, key, fn):
@@ -101,6 +105,7 @@ class ProxmoxNodeCPUUsageSensor(ProxmoxBaseSensor):
         return f"{self.node}"
 
     def _remember(self, value: int):
+        logger.debug(f"[PROXMOX] Remembering CPU value {value} for node {self.node}")
         hist = self._history_store.setdefault(self._history_key(), [])
         hist.append(int(value))
         if len(hist) > self._history_size:
@@ -109,21 +114,20 @@ class ProxmoxNodeCPUUsageSensor(ProxmoxBaseSensor):
     def _calc(self):
         d = self._pmx_get(f"/nodes/{self.node}/status") or {}
         cpu = d.get("cpu")
+        rounded = int(round(cpu*100,0))
         try:
-            return int(cpu) * 100
+            return rounded
         except:
             return 0
 
     def as_numeric(self):
-        test = self.last_values()
-        print(test)
         value = self._cached(f"nodecpu_{self.node}", self._calc)
         if value is not None:
             self._remember(value)
         return value
 
     def as_string(self):
-        return f"{self._cache.get(f'nodecpu_{self.node}', 0)}%"
+        return f"{self._cache.get(f'nodecpu_{self.node}')}%"
     
     def last_values(self) -> List[int]:
         hist = self._history_store.get(self._history_key(), [])
@@ -140,24 +144,47 @@ class ProxmoxNodeCPUUsageSensor(ProxmoxBaseSensor):
 # ------------------------------
 
 class ProxmoxNodeMemoryUsageSensor(ProxmoxBaseSensor):
+    _history_store: Dict[str, List[int]] = {}
+    _history_size = 50
+
+    def _history_key(self) -> str:
+        return f"{self.node}"
+    
+    def _remember(self, value: int):
+        logger.debug(f"[PROXMOX] Remembering MEMORY value {value} for node {self.node}")
+        hist = self._history_store.setdefault(self._history_key(), [])
+        hist.append(int(value))
+        if len(hist) > self._history_size:
+            hist.pop(0)
+
     def _calc(self):
         d = self._pmx_get(f"/nodes/{self.node}/status") or {}
         mem = d.get("memory") or {}
         try:
             used = float(mem.get("used", 0))
             total = float(mem.get("total", 1))
-            return used / total * 100.0
+            rounded = int(round(used / total * 100))
+            return rounded
         except:
-            return 0.0
+            return 0
 
     def as_numeric(self):
-        return self._cached(f"nodemem_{self.node}", self._calc)
+        value = self._cached(f"nodemem_{self.node}", self._calc)
+        if value is not None:
+            self._remember(value)
+        return value
 
     def as_string(self):
-        return f"{self._cache.get(f'nodemem_{self.node}', 0):.1f} %"    
+        return f"{self._cache.get(f'nodemem_{self.node}', 0)}%"
 
-    def last_values(self) -> List[float]:
-        return [self._cache.get(f'nodemem_{self.node}', 0)]
+    def last_values(self) -> List[int]:
+        hist = self._history_store.get(self._history_key(), [])
+        if not hist:
+            current = self._cache.get(f'nodemem_{self.node}', None)
+            if current is not None:
+                self._remember(current)
+            hist = self._history_store.get(self._history_key(), [])
+        return hist[-self._history_size:]
 
 
 # ------------------------------
@@ -171,15 +198,16 @@ class ProxmoxNodeDiskUsageSensor(ProxmoxBaseSensor):
         try:
             total = float(rootfs.get("total", 0))
             used = float(rootfs.get("used", 0))
-            return used / total * 100.0 if total else 0.0
+            rounded = int(round(used / total * 100))
+            return rounded
         except:
-            return 0.0
+            return 0
 
     def as_numeric(self):
         return self._cached(f"nodedsk_{self.node}", self._calc)
 
     def as_string(self):
-        return f"{self._cache.get(f'nodedsk_{self.node}', 0):.1f} %"    
+        return f"{self._cache.get(f'nodedsk_{self.node}', 0)}%"
 
     def last_values(self) -> List[float]:
         return [self._cache.get(f'nodedsk_{self.node}', 0)]
