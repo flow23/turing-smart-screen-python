@@ -664,25 +664,34 @@ class Disk:
     @classmethod
     def stats(cls):
         if 'MOUNTS' not in config.THEME_DATA['STATS']['DISK']:
-            mountpoints = [ {"/": config.THEME_DATA['STATS']['DISK'] }]
+            mountpoints = [{"/": config.THEME_DATA['STATS']['DISK']}]
         else:
             mountpoints = config.THEME_DATA['STATS']['DISK']['MOUNTS']
 
         for mount in mountpoints:
             mountpoint = [k for k, v in mount.items()][0]
             disk_theme_data = mount[mountpoint]
+
+            # Skip invalid / non-existing mount points entirely
             if not os.path.exists(mountpoint):
                 logger.warning('Invalid mount point in config: "%s"' % mountpoint)
-            else:
-                used = sensors.Disk.disk_used(mountpoint)
-                free = sensors.Disk.disk_free(mountpoint)
+                continue
+
+            used = sensors.Disk.disk_used(mountpoint)
+            free = sensors.Disk.disk_free(mountpoint)
 
             disk_usage_percent = sensors.Disk.disk_usage_percent(mountpoint)
+
+            # Guard against NaN values coming from sensors implementation
+            if math.isnan(disk_usage_percent):
+                logger.warning('Disk usage for mount point "%s" returned NaN, skipping' % mountpoint)
+                continue
+
             save_last_value(disk_usage_percent, cls.last_values_disk_usage, DEFAULT_HISTORY_SIZE)
-            #display_themed_progress_bar(disk_theme_data['USED']['GRAPH'], disk_usage_percent)
-            #display_themed_percent_radial_bar(disk_theme_data['USED']['RADIAL'], disk_usage_percent)
+            # display_themed_progress_bar(disk_theme_data['USED']['GRAPH'], disk_usage_percent)
+            # display_themed_percent_radial_bar(disk_theme_data['USED']['RADIAL'], disk_usage_percent)
             display_themed_percent_value(disk_theme_data['USED']['PERCENT_TEXT'], disk_usage_percent)
-            #display_themed_line_graph(disk_theme_data['USED']['LINE_GRAPH'], cls.last_values_disk_usage)
+            # display_themed_line_graph(disk_theme_data['USED']['LINE_GRAPH'], cls.last_values_disk_usage)
 
             display_themed_value(
                 theme_data=disk_theme_data['USED']['TEXT'],

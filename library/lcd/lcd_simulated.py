@@ -26,6 +26,7 @@ from library.lcd.lcd_comm import *
 
 SCREENSHOT_FILE = "screencap.png"
 WEBSERVER_PORT = 5678
+WEBSERVER_HOST = "localhost"
 
 
 # This webserver offer a blank page displaying simulated screen with auto-refresh
@@ -66,8 +67,8 @@ class LcdSimulated(LcdComm):
         self.orientation = Orientation.PORTRAIT
 
         try:
-            self.webServer = HTTPServer(("localhost", WEBSERVER_PORT), SimulatedLcdWebServer)
-            logger.debug("To see your simulated screen, open http://%s:%d in a browser" % ("localhost", WEBSERVER_PORT))
+            self.webServer = HTTPServer((WEBSERVER_HOST, WEBSERVER_PORT), SimulatedLcdWebServer)
+            logger.debug("To see your simulated screen, open http://%s:%d in a browser" % (WEBSERVER_HOST, WEBSERVER_PORT))
             threading.Thread(target=self.webServer.serve_forever).start()
         except OSError:
             logger.error("Error starting webserver! An instance might already be running on port %d." % WEBSERVER_PORT)
