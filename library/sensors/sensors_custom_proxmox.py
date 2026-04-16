@@ -79,6 +79,26 @@ class ProxmoxBaseSensor(CustomDataSource):
             logger.debug(f"[PROXMOX] ERROR: {e}")
         return None
 
+    def _cluster_nodes(self) -> List[str]:
+        """
+        Return node names participating in the cluster.
+
+        We prefer `/nodes` because it's simple and returns the node list; if it fails,
+        we fall back to the configured `node` value.
+        """
+        nodes = self._pmx_get("/nodes") or []
+        out: List[str] = []
+        if isinstance(nodes, list):
+            for n in nodes:
+                if isinstance(n, dict):
+                    name = n.get("node") or n.get("name")
+                    if name:
+                        out.append(str(name))
+        out = sorted(set(out))
+        if not out and self.node:
+            out = [self.node]
+        return out
+
     def _cached(self, key, fn):
         now = time.time()
         if key in self._cache and (now - self._last.get(key, 0)) < self.cache_ttl:
@@ -91,6 +111,141 @@ class ProxmoxBaseSensor(CustomDataSource):
         self._cache[key] = v
         self._last[key] = now
         return v
+
+
+# ------------------------------
+# CLUSTER CPU (AGGREGATED)
+# ------------------------------
+
+class ProxmoxClusterCPUUsageSensor(ProxmoxBaseSensor):
+    _history_store: Dict[str, List[int]] = {}
+    _history_size = 50
+
+    def _history_key(self) -> str:
+        return self.api_base or "cluster"
+
+    def _remember(self, value: int):
+        hist = self._history_store.setdefault(self._history_key(), [])
+        hist.append(int(value))
+        if len(hist) > self._history_size:
+            hist.pop(0)
+
+    def _calc(self):
+        nodes = self._cached("cluster_nodes", self._cluster_nodes) or []
+        if not nodes:
+            return 0
+
+        weighted_cpu = 0.0
+        total_weight = 0.0
+
+        for n in nodes:
+            d = self._pmx_get(f"/nodes/{n}/status") or {}
+            cpu = d.get("cpu")
+            if cpu is None:
+                continue
+
+            # Use CPU core/thread count if available for a more accurate aggregation.
+            cpuinfo = d.get("cpuinfo") or {}
+            weight = cpuinfo.get("cpus") or cpuinfo.get("cores") or 1
+
+            try:
+                weighted_cpu += float(cpu) * float(weight)
+                total_weight += float(weight)
+            except Exception:
+                continue
+
+        if total_weight <= 0:
+            return 0
+
+        cluster_fraction = weighted_cpu / total_weight
+        return int(round(cluster_fraction * 100, 0))
+
+    def as_numeric(self):
+        key = f"cluster_cpu_{self._history_key()}"
+        value = self._cached(key, self._calc)
+        if value is not None:
+            self._remember(value)
+        return value
+
+    def as_string(self):
+        key = f"cluster_cpu_{self._history_key()}"
+        return f"{self._cache.get(key, 0)}%"
+
+    def last_values(self) -> List[int]:
+        hist = self._history_store.get(self._history_key(), [])
+        if not hist:
+            current = self._cache.get(f"cluster_cpu_{self._history_key()}", None)
+            if current is not None:
+                self._remember(current)
+            hist = self._history_store.get(self._history_key(), [])
+        return hist[-self._history_size:]
+
+
+# ------------------------------
+# CLUSTER MEMORY (AGGREGATED)
+# ------------------------------
+
+class ProxmoxClusterMemoryUsageSensor(ProxmoxBaseSensor):
+    _history_store: Dict[str, List[int]] = {}
+    _history_size = 50
+
+    def _history_key(self) -> str:
+        return self.api_base or "cluster"
+
+    def _remember(self, value: int):
+        hist = self._history_store.setdefault(self._history_key(), [])
+        hist.append(int(value))
+        if len(hist) > self._history_size:
+            hist.pop(0)
+
+    def _calc(self):
+        nodes = self._cached("cluster_nodes", self._cluster_nodes) or []
+        if not nodes:
+            return 0
+
+        total_used = 0.0
+        total_mem = 0.0
+
+        for n in nodes:
+            d = self._pmx_get(f"/nodes/{n}/status") or {}
+            mem = d.get("memory") or {}
+
+            try:
+                used = float(mem.get("used", 0))
+                total = float(mem.get("total", 0))
+            except Exception:
+                continue
+
+            # If a node doesn't report total (unexpected), skip it.
+            if total <= 0:
+                continue
+            total_used += used
+            total_mem += total
+
+        if total_mem <= 0:
+            return 0
+
+        return int(round((total_used / total_mem) * 100, 0))
+
+    def as_numeric(self):
+        key = f"cluster_mem_{self._history_key()}"
+        value = self._cached(key, self._calc)
+        if value is not None:
+            self._remember(value)
+        return value
+
+    def as_string(self):
+        key = f"cluster_mem_{self._history_key()}"
+        return f"{self._cache.get(key, 0)}%"
+
+    def last_values(self) -> List[int]:
+        hist = self._history_store.get(self._history_key(), [])
+        if not hist:
+            current = self._cache.get(f"cluster_mem_{self._history_key()}", None)
+            if current is not None:
+                self._remember(current)
+            hist = self._history_store.get(self._history_key(), [])
+        return hist[-self._history_size:]
 
 
 # ------------------------------

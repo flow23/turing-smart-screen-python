@@ -139,7 +139,10 @@ def get_theme_data(name: str):
             # Get display size from theme.yaml
             with open(theme, "rt", encoding='utf8') as stream:
                 theme_data, ind, bsi = ruamel.yaml.util.load_yaml_guess_indent(stream)
-                return theme_data
+                # Some theme.yaml files might not load into a mapping/dict.
+                # Guard against that so the GUI doesn't crash while scanning themes.
+                if isinstance(theme_data, dict):
+                    return theme_data
     return None
 
 
@@ -147,14 +150,24 @@ def get_themes(size: str):
     themes = []
     for filename in os.listdir(THEMES_DIR):
         theme_data = get_theme_data(filename)
-        if theme_data and theme_data['display'].get("DISPLAY_SIZE", '3.5"') == size:
+        if not theme_data or not isinstance(theme_data, dict):
+            continue
+        display_data = theme_data.get("display", {})
+        if not isinstance(display_data, dict):
+            continue
+        if display_data.get("DISPLAY_SIZE", '3.5"') == size:
             themes.append(filename)
     return sorted(themes, key=str.casefold)
 
 
 def get_theme_size(name: str) -> str:
     theme_data = get_theme_data(name)
-    return theme_data['display'].get("DISPLAY_SIZE", '3.5"')
+    if not theme_data or not isinstance(theme_data, dict):
+        return '3.5"'
+    display_data = theme_data.get("display", {})
+    if not isinstance(display_data, dict):
+        return '3.5"'
+    return display_data.get("DISPLAY_SIZE", '3.5"')
 
 
 def get_com_ports():
