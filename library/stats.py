@@ -683,7 +683,7 @@ class Disk:
             if str(mountpoint).rstrip("/") == "/mnt/cache":
                 # Skip almost-empty bind-mount placeholders (e.g. df shows ~128K used).
                 # This keeps the aggregation focused on the “real” cache sub-mounts.
-                MIN_USED_BYTES = 1024 * 1024  # 1 MiB
+                MIN_USED_BYTES = 131072  # 1 MiB
 
                 sub_mounts: List[str] = []
                 try:
@@ -717,6 +717,7 @@ class Disk:
                     # sensors may return -1 on failure
                     if used_part >= 0 and free_part >= 0:
                         if used_part <= MIN_USED_BYTES:
+                            logger.debug('Skipping almost-empty bind-mount placeholder: "%s" for "%s"' % (used_part, sm))
                             continue
                         used_sum += used_part
                         free_sum += free_part
@@ -725,6 +726,7 @@ class Disk:
                 free = free_sum
                 total = used + free
                 disk_usage_percent = (used / total * 100) if total > 0 else 0
+                logger.debug('Disk usage value: "%s" for "%s"' % (disk_usage_percent, mountpoint))
             else:
                 used = sensors.Disk.disk_used(mountpoint)
                 
