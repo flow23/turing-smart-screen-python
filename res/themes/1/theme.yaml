@@ -173,7 +173,7 @@ static_text:
 STATS:
   CUSTOM:
     INTERVAL: 5   # global refresh interval
-    ProxmoxNodeCPUUsageSensor:
+    ProxmoxClusterCPUUsageSensor:
       TEXT:
         SHOW: true
         X: 175
@@ -205,7 +205,7 @@ STATS:
         LINE_WIDTH: 4
         BACKGROUND_COLOR: 0, 0, 0
         #BACKGROUND_IMAGE: background2.png
-    ProxmoxNodeMemoryUsageSensor:
+    ProxmoxClusterMemoryUsageSensor:
       TEXT:
         SHOW: true
         X: 175
