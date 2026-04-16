@@ -27,6 +27,7 @@ import locale
 import math
 import os
 import platform
+import subprocess
 import sys
 from typing import List
 
@@ -661,6 +662,26 @@ class Memory:
 class Disk:
     last_values_disk_usage = []
 
+    @staticmethod
+    def _get_zpool_usage(pool_name: str):
+        try:
+            result = subprocess.run(
+                ["zpool", "list", "-Hp", "-o", "size,alloc,free,cap", pool_name],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            line = result.stdout.strip().splitlines()[0]
+            size_str, used_str, free_str, cap_str = line.split("\t")
+            total = int(size_str)
+            used = int(used_str)
+            free = int(free_str)
+            percent = float(str(cap_str).rstrip("%"))
+            return used, free, percent
+        except Exception as e:
+            logger.debug('Failed reading zpool info for "%s": %s' % (pool_name, e))
+            return None
+
     @classmethod
     def stats(cls):
         if 'MOUNTS' not in config.THEME_DATA['STATS']['DISK']:
@@ -677,59 +698,18 @@ class Disk:
                 logger.warning('Invalid mount point in config: "%s"' % mountpoint)
                 continue
 
-            # Special-case: aggregate all sub-mounts under /mnt/cache.
-            # `psutil.disk_usage(path)` is filesystem-level, so summing directories without
-            # checking mountpoints can double-count on the same filesystem.
+            # Special-case: when displaying `/mnt/cache`, prefer the ZFS pool named `cache`.
             if str(mountpoint).rstrip("/") == "/mnt/cache":
-                # Skip almost-empty bind-mount placeholders (e.g. df shows ~128K used).
-                # This keeps the aggregation focused on the “real” cache sub-mounts.
-                MIN_USED_BYTES = 131072  # 1 MiB
-
-                sub_mounts: List[str] = []
-                try:
-                    # Recursively find mountpoints under /mnt/cache.
-                    # We rely on the "MIN_USED_BYTES" filter to avoid counting placeholder mountpoints.
-                    for root, dirs, _files in os.walk(mountpoint):
-                        for d in dirs:
-                            child = os.path.join(root, d)
-                            try:
-                                if os.path.ismount(child):
-                                    sub_mounts.append(child)
-                            except Exception:
-                                pass
-                except Exception:
-                    sub_mounts = []
-
-                # If no sub-mounts were detected, fall back to the parent mountpoint.
-                if not sub_mounts:
-                    sub_mounts = [mountpoint]
+                zpool_usage = cls._get_zpool_usage("cache")
+                if zpool_usage is not None:
+                    used, free, disk_usage_percent = zpool_usage
+                    logger.debug('ZFS pool usage value: "%s" for "%s"' % (disk_usage_percent, mountpoint))
                 else:
-                    # Deduplicate while preserving stable ordering.
-                    sub_mounts = sorted(set(sub_mounts))
-
-                used_sum = 0
-                free_sum = 0
-                for sm in sub_mounts:
-                    used_part = sensors.Disk.disk_used(sm)
-                    free_part = sensors.Disk.disk_free(sm)
-                    logger.debug('Used value: "%s" for "%s"' % (used_part, sm))
-                    logger.debug('Free value: "%s" for "%s"' % (free_part, sm))
-                    # sensors may return -1 on failure
-                    if used_part >= 0 and free_part >= 0:
-                        if used_part <= MIN_USED_BYTES:
-                            logger.debug('Skipping almost-empty bind-mount placeholder: "%s" for "%s"' % (used_part, sm))
-                            continue
-                        used_sum += used_part
-                        free_sum += free_part
-
-                used = used_sum
-                free = free_sum
-                total = used + free
-                disk_usage_percent = (used / total * 100) if total > 0 else 0
-                logger.debug('Disk usage value: "%s" for "%s"' % (disk_usage_percent, mountpoint))
+                    used = sensors.Disk.disk_used(mountpoint)
+                    free = sensors.Disk.disk_free(mountpoint)
+                    disk_usage_percent = sensors.Disk.disk_usage_percent(mountpoint)
             else:
                 used = sensors.Disk.disk_used(mountpoint)
-                
                 free = sensors.Disk.disk_free(mountpoint)
                 logger.debug('Free value: "%s" for "%s"' % (free, mountpoint))
 
