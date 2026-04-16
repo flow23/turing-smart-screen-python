@@ -681,30 +681,43 @@ class Disk:
             # `psutil.disk_usage(path)` is filesystem-level, so summing directories without
             # checking mountpoints can double-count on the same filesystem.
             if str(mountpoint).rstrip("/") == "/mnt/cache":
+                # Skip almost-empty bind-mount placeholders (e.g. df shows ~128K used).
+                # This keeps the aggregation focused on the “real” cache sub-mounts.
+                MIN_USED_BYTES = 1024 * 1024  # 1 MiB
+
                 sub_mounts: List[str] = []
                 try:
-                    for entry in os.listdir(mountpoint):
-                        logger.debug('Entry: "%s" for "%s"' % (entry, mountpoint))
-                        child = os.path.join(mountpoint, entry)
-                        if os.path.isdir(child) and os.path.ismount(child):
-                            sub_mounts.append(child)
+                    # Recursively find mountpoints under /mnt/cache.
+                    # We rely on the "MIN_USED_BYTES" filter to avoid counting placeholder mountpoints.
+                    for root, dirs, _files in os.walk(mountpoint):
+                        for d in dirs:
+                            child = os.path.join(root, d)
+                            try:
+                                if os.path.ismount(child):
+                                    sub_mounts.append(child)
+                            except Exception:
+                                pass
                 except Exception:
                     sub_mounts = []
 
                 # If no sub-mounts were detected, fall back to the parent mountpoint.
                 if not sub_mounts:
                     sub_mounts = [mountpoint]
+                else:
+                    # Deduplicate while preserving stable ordering.
+                    sub_mounts = sorted(set(sub_mounts))
 
                 used_sum = 0
                 free_sum = 0
                 for sm in sub_mounts:
-                    logger.debug('Used value: "%s" for "%s"' % (used_part, sm))
-                    logger.debug('Free value: "%s" for "%s"' % (free_part, sm))
-                    
                     used_part = sensors.Disk.disk_used(sm)
                     free_part = sensors.Disk.disk_free(sm)
+                    logger.debug('Used value: "%s" for "%s"' % (used_part, sm))
+                    logger.debug('Free value: "%s" for "%s"' % (free_part, sm))
                     # sensors may return -1 on failure
                     if used_part >= 0 and free_part >= 0:
+                        if used_part <= MIN_USED_BYTES:
+                            continue
                         used_sum += used_part
                         free_sum += free_part
 
