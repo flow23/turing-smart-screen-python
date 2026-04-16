@@ -684,6 +684,7 @@ class Disk:
                 sub_mounts: List[str] = []
                 try:
                     for entry in os.listdir(mountpoint):
+                        logger.debug('Entry: "%s" for "%s"' % (entry, mountpoint))
                         child = os.path.join(mountpoint, entry)
                         if os.path.isdir(child) and os.path.ismount(child):
                             sub_mounts.append(child)
@@ -697,6 +698,9 @@ class Disk:
                 used_sum = 0
                 free_sum = 0
                 for sm in sub_mounts:
+                    logger.debug('Used value: "%s" for "%s"' % (used_part, sm))
+                    logger.debug('Free value: "%s" for "%s"' % (free_part, sm))
+                    
                     used_part = sensors.Disk.disk_used(sm)
                     free_part = sensors.Disk.disk_free(sm)
                     # sensors may return -1 on failure
@@ -710,7 +714,7 @@ class Disk:
                 disk_usage_percent = (used / total * 100) if total > 0 else 0
             else:
                 used = sensors.Disk.disk_used(mountpoint)
-                logger.debug('Used value: "%s" for "%s"' % (used, mountpoint))
+                
                 free = sensors.Disk.disk_free(mountpoint)
                 logger.debug('Free value: "%s" for "%s"' % (free, mountpoint))
 
