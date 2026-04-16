@@ -677,13 +677,45 @@ class Disk:
                 logger.warning('Invalid mount point in config: "%s"' % mountpoint)
                 continue
 
-            used = sensors.Disk.disk_used(mountpoint)
-            logger.debug('Used value: "%s" for "%s"' % (used, mountpoint))
-            free = sensors.Disk.disk_free(mountpoint)
-            logger.debug('Free value: "%s" for "%s"' % (free, mountpoint))
+            # Special-case: aggregate all sub-mounts under /mnt/cache.
+            # `psutil.disk_usage(path)` is filesystem-level, so summing directories without
+            # checking mountpoints can double-count on the same filesystem.
+            if str(mountpoint).rstrip("/") == "/mnt/cache":
+                sub_mounts: List[str] = []
+                try:
+                    for entry in os.listdir(mountpoint):
+                        child = os.path.join(mountpoint, entry)
+                        if os.path.isdir(child) and os.path.ismount(child):
+                            sub_mounts.append(child)
+                except Exception:
+                    sub_mounts = []
 
-            disk_usage_percent = sensors.Disk.disk_usage_percent(mountpoint)
-            logger.debug('Disk usage value: "%s" for "%s"' % (disk_usage_percent, mountpoint))
+                # If no sub-mounts were detected, fall back to the parent mountpoint.
+                if not sub_mounts:
+                    sub_mounts = [mountpoint]
+
+                used_sum = 0
+                free_sum = 0
+                for sm in sub_mounts:
+                    used_part = sensors.Disk.disk_used(sm)
+                    free_part = sensors.Disk.disk_free(sm)
+                    # sensors may return -1 on failure
+                    if used_part >= 0 and free_part >= 0:
+                        used_sum += used_part
+                        free_sum += free_part
+
+                used = used_sum
+                free = free_sum
+                total = used + free
+                disk_usage_percent = (used / total * 100) if total > 0 else 0
+            else:
+                used = sensors.Disk.disk_used(mountpoint)
+                logger.debug('Used value: "%s" for "%s"' % (used, mountpoint))
+                free = sensors.Disk.disk_free(mountpoint)
+                logger.debug('Free value: "%s" for "%s"' % (free, mountpoint))
+
+                disk_usage_percent = sensors.Disk.disk_usage_percent(mountpoint)
+                logger.debug('Disk usage value: "%s" for "%s"' % (disk_usage_percent, mountpoint))
 
             # Guard against NaN values coming from sensors implementation
             if math.isnan(disk_usage_percent):
