@@ -1,1 +1,268 @@
-/app/customs/res/themes/1/theme left aligned.yaml
+---
+author: "@flow23"
+
+display:
+  DISPLAY_SIZE: 8.8"
+  DISPLAY_ORIENTATION: landscape
+  DISPLAY_RGB_LED: 224, 2, 48
+
+static_images:
+  BACKGROUND:
+    PATH:  background.png
+    X: 0
+    Y: 0
+    WIDTH: 1920
+    HEIGHT: 480
+
+
+static_text:
+  Proxmox:
+   TEXT: PROXMOX
+   X: 10
+   Y: 10
+   FONT: roboto-mono/RobotoMono-Bold.ttf
+   FONT_SIZE: 38
+   FONT_COLOR: 255,255,255
+   BACKGROUND_IMAGE: background.png
+# # UNRAID
+#   Unraid:
+#     TEXT: UNRAID
+#     X: 645
+#     Y: 10
+#     FONT: roboto-mono/RobotoMono-Bold.ttf
+#     FONT_SIZE: 38
+#     FONT_COLOR: 255,255,255
+#     BACKGROUND_IMAGE: background.png
+  UnraidCPU:
+    TEXT: "CPU"
+    X: 645
+    Y: 10
+    FONT: BoutiqueBitmap9x9/BoutiqueBitmap9x9_Square_Dot.ttf
+    FONT_SIZE: 80
+    FONT_COLOR: 255,255,255
+    #BACKGROUND_IMAGE: background.png
+    BACKGROUND_COLOR: 100,100,100
+  UnraidRAM:
+    TEXT: "RAM"
+    X: 645
+    Y: 120
+    FONT: BoutiqueBitmap9x9/BoutiqueBitmap9x9_Square_Dot.ttf
+    FONT_SIZE: 80
+    FONT_COLOR: 255,255,255
+    #BACKGROUND_IMAGE: background.png
+    BACKGROUND_COLOR: 100,100,100
+  UnraidSTO:
+    TEXT: "STO"
+    X: 645
+    Y: 190
+    FONT: BoutiqueBitmap9x9/BoutiqueBitmap9x9_Square_Dot.ttf
+    FONT_SIZE: 80
+    FONT_COLOR: 255,255,255
+    #BACKGROUND_IMAGE: background.png
+    BACKGROUND_COLOR: 100,100,100
+  UnraidHDD/:
+    TEXT: "/"
+    X: 960
+    Y: 190
+    FONT: BoutiqueBitmap9x9/BoutiqueBitmap9x9_Square_Dot.ttf
+    FONT_SIZE: 80
+    FONT_COLOR: 255,255,255
+    #BACKGROUND_IMAGE: background.png
+    BACKGROUND_COLOR: 100,100,100
+  UnraidNET:
+    TEXT: "NET"
+    X: 645
+    Y: 260
+    FONT: BoutiqueBitmap9x9/BoutiqueBitmap9x9_Square_Dot.ttf
+    FONT_SIZE: 80
+    FONT_COLOR: 255,255,255
+    #BACKGROUND_IMAGE: background.png
+    BACKGROUND_COLOR: 100,100,100
+  UnraidUPT:
+    TEXT: "UPT"
+    X: 645
+    Y: 400
+    FONT: BoutiqueBitmap9x9/BoutiqueBitmap9x9_Square_Dot.ttf
+    FONT_SIZE: 80
+    FONT_COLOR: 255,255,255
+    #BACKGROUND_IMAGE: background.png
+    BACKGROUND_COLOR: 100,100,100
+
+  Pi-hole:
+   TEXT: PI-HOLE
+   X: 1280
+   Y: 10
+   FONT: roboto-mono/RobotoMono-Bold.ttf
+   FONT_SIZE: 38
+   FONT_COLOR: 255,255,255
+   BACKGROUND_IMAGE: background.png
+  TIME:
+   TEXT: TIME
+   X: 1527
+   Y: 332
+   FONT: roboto-mono/RobotoMono-Bold.ttf
+   FONT_SIZE: 36
+   FONT_COLOR: 205, 205, 205
+   BACKGROUND_IMAGE: background.png
+
+STATS:
+  CPU:
+    PERCENTAGE:
+      INTERVAL: 1
+      TEXT:
+        SHOW: True
+        SHOW_UNIT: True
+        X: 810
+        Y: 10
+        WIDTH: 150
+        HEIGHT: 60
+        FONT: BoutiqueBitmap9x9/BoutiqueBitmap9x9_Square_Dot.ttf
+        FONT_SIZE: 80
+        FONT_COLOR: 255,255,255
+        BACKGROUND_COLOR: 50, 50, 50
+        #BACKGROUND_IMAGE: background.png
+        #ALIGN: center
+        ANCHOR: rb
+      LINE_GRAPH:
+        SHOW: true
+        X: 960
+        Y: 50
+        WIDTH: 315
+        HEIGHT: 60
+        MIN_VALUE: 0
+        MAX_VALUE: 100
+        HISTORY_SIZE: 50
+        AUTOSCALE: False
+        LINE_COLOR: 255,255,255
+        LINE_WIDTH: 4
+        BACKGROUND_COLOR: 0, 0, 0
+        #BACKGROUND_IMAGE: background.png
+  MEMORY:
+    INTERVAL: 1
+    VIRTUAL:
+      PERCENT_TEXT:
+        SHOW: True
+        SHOW_UNIT: True
+        X: 810
+        Y: 120
+        WIDTH: 150
+        HEIGHT: 60
+        FONT: BoutiqueBitmap9x9/BoutiqueBitmap9x9_Square_Dot.ttf
+        FONT_SIZE: 80
+        FONT_COLOR: 255,255,255
+        BACKGROUND_COLOR: 50, 50, 50
+        #BACKGROUND_IMAGE: background.png
+        #ALIGN: center
+        ANCHOR: rb
+      LINE_GRAPH:
+        SHOW: true
+        X: 960
+        Y: 120
+        WIDTH: 315
+        HEIGHT: 60
+        MIN_VALUE: 0
+        MAX_VALUE: 100
+        HISTORY_SIZE: 50
+        AUTOSCALE: False
+        LINE_COLOR: 255,255,255
+        LINE_WIDTH: 4
+        BACKGROUND_COLOR: 0, 0, 0
+        #BACKGROUND_IMAGE: background.png
+  DISK:
+    INTERVAL: 60
+    USED:
+      PERCENT_TEXT:
+        SHOW: True
+        SHOW_UNIT: True
+        X: 800
+        Y: 190
+        WIDTH: 150
+        HEIGHT: 60
+        FONT: BoutiqueBitmap9x9/BoutiqueBitmap9x9_Square_Dot.ttf
+        FONT_SIZE: 80
+        FONT_COLOR: 255,255,255
+        BACKGROUND_COLOR: 50, 50, 50
+        #BACKGROUND_IMAGE: background.png
+        #ALIGN: center
+        ANCHOR: rb
+    TOTAL:
+      TEXT:
+        SHOW: True
+        SHOW_UNIT: True
+        X: 1030
+        Y: 190
+        WIDTH: 150
+        HEIGHT: 60
+        FONT: BoutiqueBitmap9x9/BoutiqueBitmap9x9_Square_Dot.ttf
+        FONT_SIZE: 80
+        FONT_COLOR: 255,255,255
+        BACKGROUND_COLOR: 50, 50, 50
+        #BACKGROUND_IMAGE: background.png
+        #ALIGN: center
+        ANCHOR: rb
+      # LINE_GRAPH:
+      #   SHOW: true
+      #   X: 960
+      #   Y: 190
+      #   WIDTH: 315
+      #   HEIGHT: 60
+      #   MIN_VALUE: 0
+      #   MAX_VALUE: 100
+      #   HISTORY_SIZE: 50
+      #   AUTOSCALE: False
+      #   LINE_COLOR: 255,255,255
+      #   LINE_WIDTH: 4
+      #   BACKGROUND_COLOR: 0, 0, 0
+      #   #BACKGROUND_IMAGE: background.png
+  NET:
+    INTERVAL: 1
+    ETH:
+      UPLOAD:
+        TEXT:
+          SHOW: true
+          X: 800
+          Y: 260
+          WIDTH: 475
+          HEIGHT: 60
+          FONT: BoutiqueBitmap9x9/BoutiqueBitmap9x9_Square_Dot.ttf
+          FONT_SIZE: 80
+          FONT_COLOR: 255,255,255
+          BACKGROUND_COLOR: 50, 50, 50
+          #BACKGROUND_IMAGE: background.png
+          #ALIGN: right
+          ANCHOR: rt
+      DOWNLOAD:
+        TEXT:
+          SHOW: true
+          X: 800
+          Y: 330
+          WIDTH: 475
+          HEIGHT: 60
+          FONT: BoutiqueBitmap9x9/BoutiqueBitmap9x9_Square_Dot.ttf
+          FONT_SIZE: 80
+          FONT_COLOR: 255,255,255
+          BACKGROUND_COLOR: 50, 50, 50
+          #BACKGROUND_IMAGE: background.png
+          #ALIGN: right
+          ANCHOR: rt
+  UPTIME:
+    INTERVAL: 60
+    FORMATTED:  # Uptime as formatted string with days e.g. "49 days, 16:47:16"
+      TEXT:
+        SHOW: TRUE
+        X: 800
+        Y: 400
+        # Text sensors may vary in size and create "ghosting" effects where old value stay displayed under the new one.
+        # To avoid this use one of these 2 methods (or both):
+        #   - either use a monospaced font (fonts with "mono" in name, see res/fonts/ for available fonts)
+        #   - or force a static width/height for the text field. Be sure to have enough space for the longest value that can be displayed (e.g. "100%" for a percentage)
+        #WIDTH: 475   # Uncomment to force a static width
+        WIDTH:  310   # Uncomment to force a static width
+        HEIGHT: 60   # Uncomment to force static height
+        FONT: BoutiqueBitmap9x9/BoutiqueBitmap9x9_Square_Dot.ttf
+        FONT_SIZE: 80
+        FONT_COLOR: 255,255,255
+        BACKGROUND_COLOR: 50, 50, 50
+        #BACKGROUND_IMAGE: background.png
+        #ALIGN: right
+        ANCHOR: lt
