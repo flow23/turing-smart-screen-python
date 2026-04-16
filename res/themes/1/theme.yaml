@@ -233,7 +233,7 @@ STATS:
         LINE_WIDTH: 4
         BACKGROUND_COLOR: 0, 0, 0
         #BACKGROUND_IMAGE: background2.png
-    ProxmoxNodeDiskUsageSensor:
+    ProxmoxClusterDiskUsageSensor:
       TEXT:
         SHOW: True
         X: 175

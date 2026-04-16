@@ -249,6 +249,71 @@ class ProxmoxClusterMemoryUsageSensor(ProxmoxBaseSensor):
 
 
 # ------------------------------
+# CLUSTER DISK (AGGREGATED)
+# ------------------------------
+
+class ProxmoxClusterDiskUsageSensor(ProxmoxBaseSensor):
+    """
+    Returns cluster rootfs usage in percent (0-100).
+    Aggregates each node's `rootfs.used` / `rootfs.total` by summing used and total.
+    """
+
+    _history_store: Dict[str, List[int]] = {}
+    _history_size = 50
+
+    def _history_key(self) -> str:
+        return self.api_base or "cluster"
+
+    def _remember(self, value: int):
+        hist = self._history_store.setdefault(self._history_key(), [])
+        hist.append(int(value))
+        if len(hist) > self._history_size:
+            hist.pop(0)
+
+    def _calc(self):
+        nodes = self._cached("cluster_nodes", self._cluster_nodes) or []
+        if not nodes:
+            return 0
+
+        total_used = 0.0
+        total_size = 0.0
+
+        for n in nodes:
+            d = self._pmx_get(f"/nodes/{n}/status") or {}
+            rootfs = d.get("rootfs") or {}
+            try:
+                total_size += float(rootfs.get("total", 0))
+                total_used += float(rootfs.get("used", 0))
+            except Exception:
+                continue
+
+        if total_size <= 0:
+            return 0
+
+        return int(round((total_used / total_size) * 100, 0))
+
+    def as_numeric(self):
+        key = f"cluster_dsk_{self._history_key()}"
+        value = self._cached(key, self._calc)
+        if value is not None:
+            self._remember(value)
+        return value
+
+    def as_string(self):
+        key = f"cluster_dsk_{self._history_key()}"
+        return f"{self._cache.get(key, 0)}%"
+
+    def last_values(self) -> List[int]:
+        hist = self._history_store.get(self._history_key(), [])
+        if not hist:
+            current = self._cache.get(f"cluster_dsk_{self._history_key()}", None)
+            if current is not None:
+                self._remember(current)
+            hist = self._history_store.get(self._history_key(), [])
+        return hist[-self._history_size:]
+
+
+# ------------------------------
 # NODE CPU
 # ------------------------------
 
