@@ -678,9 +678,12 @@ class Disk:
                 continue
 
             used = sensors.Disk.disk_used(mountpoint)
+            logger.debug('Used value: "%s" for "%s"' % (used, mountpoint))
             free = sensors.Disk.disk_free(mountpoint)
+            logger.debug('Free value: "%s" for "%s"' % (free, mountpoint))
 
             disk_usage_percent = sensors.Disk.disk_usage_percent(mountpoint)
+            logger.debug('Disk usage value: "%s" for "%s"' % (disk_usage_percent, mountpoint))
 
             # Guard against NaN values coming from sensors implementation
             if math.isnan(disk_usage_percent):
